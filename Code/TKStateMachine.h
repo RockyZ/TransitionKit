@@ -156,9 +156,10 @@
  Retrieves the event with the given name from the receiver.
  
  @param name The name of the event to retrieve.
+ @param sourceStateName The name of the transition source state.
  @returns The event object with the given name or `nil` if it could not be found.
  */
-- (TKEvent *)eventNamed:(NSString *)name;
+- (TKEvent *)eventNamed:(NSString *)name withSourceStateNamed:(NSString *)soureStateName;
 
 ///-----------------------------------
 /// @name Activating the State Machine

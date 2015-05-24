@@ -131,7 +131,7 @@ context(@"when initialized", ^{
         });
         
         it(@"can retrieve the event by name", ^{
-            TKEvent *fetchedEvent = [stateMachine eventNamed:@"Start Dating"];
+            TKEvent *fetchedEvent = [stateMachine eventNamed:@"Start Dating" withSourceStateNamed:@"Single"];
             [[fetchedEvent should] equal:event];
         });
     });

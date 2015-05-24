@@ -171,10 +171,22 @@ static NSString *TKQuoteString(NSString *string)
     }
 }
 
+- (TKEvent *)eventNamed:(NSString *)name withSourceStateNamed:(NSString *)soureStateName
+{
+    for (TKEvent *event in self.mutableEvents) {
+        if ([event.name isEqualToString:name] && [[event.sourceStates valueForKey:@"name"] containsObject:soureStateName]) {
+            return event;
+        }
+    }
+    return nil;
+}
+
 - (TKEvent *)eventNamed:(NSString *)name
 {
     for (TKEvent *event in self.mutableEvents) {
-        if ([event.name isEqualToString:name]) return event;
+        if ([event.name isEqualToString:name]) {
+            return event;
+        }
     }
     return nil;
 }
@@ -194,9 +206,12 @@ static NSString *TKQuoteString(NSString *string)
 
 - (BOOL)canFireEvent:(id)eventOrEventName
 {
+    if (!self.isActive) {
+        return NO;
+    }
+    
     if (! [eventOrEventName isKindOfClass:[TKEvent class]] && ![eventOrEventName isKindOfClass:[NSString class]]) [NSException raise:NSInvalidArgumentException format:@"Expected a `TKEvent` object or `NSString` object specifying the name of an event, instead got a `%@` (%@)", [eventOrEventName class], eventOrEventName];
-    TKEvent *event = [eventOrEventName isKindOfClass:[TKEvent class]] ? eventOrEventName : [self eventNamed:eventOrEventName];
-    if (! event) [NSException raise:NSInvalidArgumentException format:@"Cannot find an Event named '%@'", eventOrEventName];
+    TKEvent *event = [eventOrEventName isKindOfClass:[TKEvent class]] ? eventOrEventName : [self eventNamed:eventOrEventName withSourceStateNamed:self.currentState ? self.currentState.name : self.initialState.name];
     return [event.sourceStates containsObject:self.currentState];
 }
 
@@ -207,6 +222,10 @@ static NSString *TKQuoteString(NSString *string)
     if (! [eventOrEventName isKindOfClass:[TKEvent class]] && ![eventOrEventName isKindOfClass:[NSString class]]) [NSException raise:NSInvalidArgumentException format:@"Expected a `TKEvent` object or `NSString` object specifying the name of an event, instead got a `%@` (%@)", [eventOrEventName class], eventOrEventName];
     TKEvent *event = [eventOrEventName isKindOfClass:[TKEvent class]] ? eventOrEventName : [self eventNamed:eventOrEventName];
     if (! event) [NSException raise:NSInvalidArgumentException format:@"Cannot find an Event named '%@'", eventOrEventName];
+    
+    if ([eventOrEventName isKindOfClass:[NSString class]]) {
+        event = [self eventNamed:eventOrEventName withSourceStateNamed:self.currentState.name] ?: event;
+    }
 
     // Check that this transition is permitted
     if (event.sourceStates != nil && ![event.sourceStates containsObject:self.currentState]) {
