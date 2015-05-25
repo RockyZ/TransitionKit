@@ -160,6 +160,15 @@ static NSString *TKQuoteString(NSString *string)
         }
     }
     if (! [self.mutableStates containsObject:event.destinationState]) [NSException raise:NSInternalInconsistencyException format:@"Cannot add event '%@' to the state machine: the event references a state '%@', which has not been added to the state machine.", event.name, event.destinationState.name];
+    
+    if ([self eventNamed:event.name]) {
+        for (TKState *state in event.sourceStates) {
+            if ([self eventNamed:event.name withSourceStateNamed:state.name]) {
+                [NSException raise:NSInternalInconsistencyException format:@"Cannot add event '%@' to the state machine: the event references a source state '%@', which has been added to the state machine.", event.name, state.name];
+            }
+        }
+    }
+    
     [self.mutableEvents addObject:event];
 }
 

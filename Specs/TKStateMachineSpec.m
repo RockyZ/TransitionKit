@@ -114,6 +114,20 @@ context(@"when initialized", ^{
             });
         });
         
+        context(@"when a source state referenced by the event repeats to be added to the state machine", ^{
+            it(@"raises an exception", ^{
+                stateMachine = [TKStateMachine new];
+                [stateMachine addState:singleState];
+                [stateMachine addState:datingState];
+                event = [TKEvent eventWithName:@"Start Dating" transitioningFromStates:@[ singleState ] toState:datingState];
+                TKEvent *anotherEvent = [TKEvent eventWithName:@"Start Dating" transitioningFromStates:@[ singleState ] toState:datingState];
+                [[theBlock(^{
+                    [stateMachine addEvent:event];
+                    [stateMachine addEvent:anotherEvent];
+                }) should] raiseWithName:NSInternalInconsistencyException reason:@"Cannot add event 'Start Dating' to the state machine: the event references a source state 'Single', which has been added to the state machine."];
+            });
+        });
+        
         beforeEach(^{
             singleState = [TKState stateWithName:@"Single"];
             datingState = [TKState stateWithName:@"Dating"];
