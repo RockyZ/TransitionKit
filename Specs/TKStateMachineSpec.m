@@ -307,10 +307,12 @@ describe(@"A State Machine Modeling Dating", ^{
     __block TKState *singleState;
     __block TKState *datingState;
     __block TKState *marriedState;
+    __block TKState *missedState;
     __block TKEvent *startDating;
     __block TKEvent *breakup;
     __block TKEvent *getMarried;
     __block TKEvent *divorce;
+    __block TKEvent *miss;
     
     beforeEach(^{
         person = [TKSpecPerson new];
@@ -331,7 +333,10 @@ describe(@"A State Machine Modeling Dating", ^{
             person.happy = NO;
         }];
         marriedState = [TKState stateWithName:@"Married"];
-        [stateMachine addStates:@[ singleState, datingState, marriedState ]];
+        
+        missedState = [TKState stateWithName:@"Missed"];
+        
+        [stateMachine addStates:@[ singleState, datingState, marriedState, missedState ]];
         
         startDating = [TKEvent eventWithName:@"Start Dating" transitioningFromStates:@[ singleState ] toState:datingState];
         [startDating setDidFireEventBlock:^(TKEvent *event, TKTransition *transition) {
@@ -356,7 +361,9 @@ describe(@"A State Machine Modeling Dating", ^{
             [person startTryingToPickUpCollegeGirls];
         }];
         
-        [stateMachine addEvents:@[ startDating, breakup, getMarried, divorce ]];
+        miss = [TKEvent eventWithName:@"Miss" transitioningFromStates:@[ singleState, datingState, marriedState ] toState:missedState];
+        
+        [stateMachine addEvents:@[ startDating, breakup, getMarried, divorce, miss]];
     });
     
     context(@"when a Single Person Starts Dating", ^{
@@ -608,6 +615,26 @@ describe(@"A State Machine Modeling Dating", ^{
         
         it(@"cannot be fired", ^{
             [[@([stateMachine canFireEvent:@"Start Dating"]) should] beNo];
+        });
+    });
+    
+    context(@"when a Person misses", ^{
+        it(@"can miss for single", ^{
+            stateMachine.initialState = [stateMachine stateNamed:@"Single"];
+            [stateMachine activate];
+            [[@([stateMachine canFireEvent:@"Miss"]) should] beYes];
+        });
+        
+        it(@"can miss for married", ^{
+            stateMachine.initialState = [stateMachine stateNamed:@"Married"];
+            [stateMachine activate];
+            [[@([stateMachine canFireEvent:@"Miss"]) should] beYes];
+        });
+        
+        it(@"missed after miss event", ^{
+            stateMachine.initialState = [stateMachine stateNamed:@"Married"];
+            [stateMachine fireEvent:@"Miss" userInfo:nil error:NULL];
+            [[stateMachine.currentState.name should] equal:@"Missed"];
         });
     });
 });
